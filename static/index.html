@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoanCheck India — AI Loan Approval Engine</title>
+  <meta name="description" content="Instant AI-powered loan approval predictor using XGBoost ML. Compare eligibility across SBI, BOB, IOB, PNB, HDFC, ICICI and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════
+       BASE RESET & TOKENS
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4fa;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --navy: #0f172a;
+      --navy2: #1e293b;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --indigo: #4f46e5;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #d97706;
+      --text: #0f172a;
+      --text-2: #475569;
+      --text-3: #94a3b8;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.05);
+      --shadow: 0 4px 16px rgba(0,0,0,.07);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.10);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-xs: 7px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      scroll-behavior: smooth;
+    }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; border: none; }
+    input, select { font-family: inherit; }
+
+    /* ═══════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+    /* ═══════════════════════════════════════════
+       TOPBAR
+    ═══════════════════════════════════════════ */
+    .topbar {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+      padding: 0 2.5rem;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      box-shadow: 0 2px 20px rgba(15,23,42,.4);
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .topbar-brand .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .topbar-brand span { color: white; font-weight: 800; font-size: 18px; letter-spacing: -.02em; }
+    .topbar-brand small { color: #93c5fd; font-size: 11px; font-weight: 500; display: block; margin-top: -2px; }
+    .topbar-badges { display: flex; gap: 8px; }
+    .topbar-badge {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      color: #bfdbfe; font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 99px; letter-spacing: .02em;
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════ */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+      padding: 3rem 2.5rem 2.5rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 350px; height: 350px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,.2) 0%, transparent 70%);
+    }
+    .hero-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero h1 { color: white; font-size: 2.2rem; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; }
+    .hero h1 span { color: #60a5fa; }
+    .hero p { color: #94a3b8; font-size: 14.5px; margin-top: 8px; max-width: 600px; line-height: 1.6; }
+    .hero-stats { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+    .hero-stat { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; }
+    .hero-stat .val { color: white; font-size: 20px; font-weight: 800; }
+    .hero-stat .lbl { color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ═══════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════ */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 24px 60px;
+    }
+
+    /* ── SIDEBAR PANEL ── */
+    .sidebar-panel {
+      position: sticky; top: 80px; height: fit-content;
+    }
+    .form-card {
+      background: white; border-radius: 18px; border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .form-card-header {
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      padding: 20px 24px;
+    }
+    .form-card-header h2 { color: white; font-size: 16px; font-weight: 800; }
+    .form-card-header p { color: #93c5fd; font-size: 12px; margin-top: 2px; }
+    .form-body { padding: 20px 24px; }
+
+    .section-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10.5px; font-weight: 700; color: #3b82f6;
+      text-transform: uppercase; letter-spacing: .08em;
+      margin: 16px 0 10px; padding-bottom: 6px;
+      border-bottom: 1px solid #eff6ff;
+    }
+    .section-label i { font-size: 11px; }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 11.5px; font-weight: 600; color: var(--text-2);
+      margin-bottom: 5px;
+    }
+    .field label .hint { font-weight: 400; color: var(--text-3); font-size: 10.5px; }
+
+    .field input[type="number"],
+    .field select {
+      width: 100%; padding: 9px 12px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-xs); font-size: 13.5px; font-weight: 500;
+      color: var(--text); background: var(--surface-2);
+      transition: border-color .2s, box-shadow .2s; outline: none;
+      -webkit-appearance: none; appearance: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .field input.invalid, .field select.invalid {
+      border-color: var(--red); box-shadow: 0 0 0 3px rgba(220,38,38,.08);
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-3); pointer-events: none; font-size: 12px;
+    }
+
+    /* Range Slider */
+    .slider-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .slider-val { font-size: 13px; font-weight: 700; color: var(--blue); }
+    input[type="range"] {
+      width: 100%; accent-color: var(--blue); cursor: pointer; height: 4px;
+    }
+
+    /* Predict Button */
+    .predict-btn {
+      width: 100%; padding: 13px 0; margin-top: 18px;
+      background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+      color: white; font-size: 15px; font-weight: 800;
+      border-radius: 12px; letter-spacing: -.01em;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 18px rgba(29,78,216,.35);
+      transition: all .25s; transform-origin: center;
+    }
+    .predict-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(29,78,216,.45); }
+    .predict-btn:active { transform: scale(.98); }
+    .predict-btn .spin { display: none; animation: spin 1s linear infinite; }
+    .predict-btn.loading .spin { display: inline; }
+    .predict-btn.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── LIVE METRICS STRIP ── */
+    .metrics-strip {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 14px 16px; box-shadow: var(--shadow-sm);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .metric-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .metric-card .metric-icon { font-size: 20px; margin-bottom: 4px; }
+    .metric-card .metric-val { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+    .metric-card .metric-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+    .metric-card .metric-tag { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-top: 5px; }
+    .tag-green { background: #dcfce7; color: #16a34a; }
+    .tag-amber { background: #fef9c3; color: #a16207; }
+    .tag-red { background: #fee2e2; color: #dc2626; }
+    .tag-blue { background: #eff6ff; color: #1d4ed8; }
+
+    /* ── RESULT PANEL ── */
+    .result-panel.hidden { display: none; }
+    .result-panel { animation: fadeSlide .4s ease; }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .result-banner {
+      border-radius: 18px; padding: 24px 28px; margin-bottom: 20px;
+      display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 20px;
+      position: relative; overflow: hidden;
+    }
+    .result-banner::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+    .result-banner.approved { background: linear-gradient(135deg, #064e3b, #065f46 55%, #047857); border: 1px solid rgba(16,185,129,.3); }
+    .result-banner.rejected { background: linear-gradient(135deg, #450a0a, #7f1d1d 55%, #991b1b); border: 1px solid rgba(248,113,113,.3); }
+    .result-icon { font-size: 52px; line-height: 1; }
+    .result-title { color: white; font-size: 24px; font-weight: 900; }
+    .result-sub { color: rgba(255,255,255,.75); font-size: 13px; margin-top: 4px; }
+    .result-prob-box {
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px; padding: 14px 20px; text-align: center;
+    }
+    .result-prob-box .prob-lbl { color: rgba(255,255,255,.65); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .result-prob-box .prob-val { color: white; font-size: 36px; font-weight: 900; }
+    .result-score-box {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px; padding: 14px 18px; min-width: 120px;
+    }
+    .result-score-box .score-row { color: rgba(255,255,255,.8); font-size: 12px; margin-bottom: 4px; }
+    .result-score-box .score-row b { color: white; }
+
+    /* Progress bar */
+    .prob-bar { height: 8px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; margin: 12px 0 4px; }
+    .prob-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #34d399, #059669); transition: width 1s ease; }
+    .rejected .prob-fill { background: linear-gradient(90deg, #fca5a5, #ef4444); }
+
+    /* ── TABS ── */
+    .tab-nav { display: flex; gap: 0; border-radius: 12px 12px 0 0; overflow: hidden; background: white; border: 1px solid var(--border); }
+    .tab-btn {
+      flex: 1; padding: 13px 16px; font-size: 13px; font-weight: 700; color: var(--text-3);
+      background: white; border-bottom: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .2s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-2); background: #f8fafc; }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: white; }
+    .tab-btn i { font-size: 13px; }
+
+    .tab-content { background: white; border: 1px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; padding: 24px; }
+    .tab-pane { display: none; animation: fadeIn .25s ease; }
+    .tab-pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── FACTOR BARS ── */
+    .factor-row {
+      background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-xs);
+      padding: 10px 14px; margin-bottom: 8px;
+    }
+    .factor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .factor-score { font-weight: 800; }
+    .factor-bar { height: 7px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .factor-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+    .fill-green { background: linear-gradient(90deg, #4ade80, #16a34a); }
+    .fill-amber { background: linear-gradient(90deg, #fcd34d, #d97706); }
+    .fill-red { background: linear-gradient(90deg, #fca5a5, #dc2626); }
+
+    /* ── SCORECARD TABLE ── */
+    .scorecard { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .scorecard-head {
+      display: grid; grid-template-columns: 1fr 1fr 120px;
+      background: #f1f5f9; padding: 9px 14px;
+      font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em;
+    }
+    .scorecard-row {
+      display: grid; grid-template-columns: 1fr 1fr 120px;
+      padding: 11px 14px; border-top: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .scorecard-row:hover { background: #f8fafc; }
+    .sc-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .sc-val { font-size: 12.5px; color: var(--text-2); }
+    .sc-status { font-size: 12px; font-weight: 700; }
+
+    /* ── BANK MATRIX ── */
+    .bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .bank-card {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 16px; background: white;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .bank-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .bank-card.eligible   { border-left: 4px solid #16a34a; }
+    .bank-card.borderline { border-left: 4px solid #d97706; }
+    .bank-card.ineligible { border-left: 4px solid #dc2626; }
+    .bank-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .bank-name { font-size: 14px; font-weight: 800; color: var(--text); }
+    .bank-type { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+    .bank-badge { padding: 3px 10px; border-radius: 99px; font-size: 10.5px; font-weight: 700; }
+    .badge-eligible   { background: #dcfce7; color: #15803d; }
+    .badge-borderline { background: #fef9c3; color: #a16207; }
+    .badge-ineligible { background: #fee2e2; color: #b91c1c; }
+    .bank-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; background: #f8fafc; padding: 8px 10px; border-radius: 8px; }
+    .bank-info span { color: var(--text-2); }
+    .bank-info b { color: var(--text); }
+    .bank-reasons { margin-top: 7px; font-size: 11px; color: #dc2626; }
+
+    /* ── WHAT-IF CARDS ── */
+    .whatif-grid { display: grid; gap: 12px; }
+    .whatif-card {
+      border-radius: var(--radius-sm); padding: 15px 18px;
+      display: flex; gap: 14px; align-items: flex-start;
+      border: 1.5px solid;
+    }
+    .whatif-card.green  { background: #f0fdf4; border-color: #86efac; }
+    .whatif-card.blue   { background: #eff6ff; border-color: #93c5fd; }
+    .whatif-card.amber  { background: #fffbeb; border-color: #fcd34d; }
+    .whatif-card.purple { background: #f5f3ff; border-color: #c4b5fd; }
+    .whatif-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .whatif-card.green .whatif-icon  { background: #dcfce7; }
+    .whatif-card.blue  .whatif-icon  { background: #dbeafe; }
+    .whatif-card.amber .whatif-icon  { background: #fef9c3; }
+    .whatif-card.purple .whatif-icon { background: #ede9fe; }
+    .whatif-title { font-size: 13.5px; font-weight: 800; }
+    .whatif-card.green  .whatif-title { color: #15803d; }
+    .whatif-card.blue   .whatif-title { color: #1d4ed8; }
+    .whatif-card.amber  .whatif-title { color: #92400e; }
+    .whatif-card.purple .whatif-title { color: #6d28d9; }
+    .whatif-desc { font-size: 12.5px; color: var(--text-2); margin-top: 3px; }
+
+    /* ── STRENGTHS/RISKS ── */
+    .sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sr-card { border-radius: var(--radius-sm); padding: 14px; }
+    .sr-card.strengths { background: #f0fdf4; border: 1px solid #86efac; }
+    .sr-card.risks     { background: #fef2f2; border: 1px solid #fecaca; }
+    .sr-title { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+    .sr-card.strengths .sr-title { color: #15803d; }
+    .sr-card.risks     .sr-title { color: #b91c1c; }
+    .sr-item { display: flex; gap: 7px; font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; align-items: flex-start; }
+    .sr-item i { margin-top: 2px; font-size: 11px; flex-shrink: 0; }
+    .sr-card.strengths .sr-item i { color: #16a34a; }
+    .sr-card.risks     .sr-item i { color: #dc2626; }
+
+
+
+    /* ═══════════════════════════════════════════
+       HARD REASON ALERT
+    ═══════════════════════════════════════════ */
+    .hard-alert {
+      background: #fef2f2; border: 1.5px solid #fecaca; border-left: 4px solid #dc2626;
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: 13px; color: #991b1b;
+    }
+    .hard-alert i { margin-right: 6px; }
+
+    /* ═══════════════════════════════════════════
+       UTILITIES
+    ═══════════════════════════════════════════ */
+    .section-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title i { color: var(--blue); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .text-sm { font-size: 12.5px; color: var(--text-2); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* Landing state info boxes */
+    .landing-info {
+      background: white; border-radius: 18px; border: 1px solid var(--border);
+      padding: 40px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .landing-info .landing-icon { font-size: 48px; margin-bottom: 16px; }
+    .landing-info h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .landing-info p { font-size: 14px; color: var(--text-2); max-width: 400px; margin: 0 auto; line-height: 1.6; }
+    .step-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+    .step-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: white; margin: 0 auto 10px;
+    }
+    .step-card p { font-size: 12.5px; color: var(--text-2); margin-top: 5px; line-height: 1.5; }
+
+    /* ── Validation notice ── */
+    .validation-msg { font-size: 11px; color: var(--red); margin-top: 4px; display: none; }
+    .validation-msg.show { display: block; }
+
+    /* Amortization chart wrapper */
+    .chart-wrap { position: relative; height: 240px; }
+
+    /* ─ Responsive ─ */
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .sidebar-panel { position: static; }
+      .metrics-strip { grid-template-columns: repeat(3, 1fr); }
+      .bank-grid { grid-template-columns: 1fr; }
+      .sr-grid { grid-template-columns: 1fr; }
+      .step-cards { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.5rem; }
+      .metrics-strip { grid-template-columns: 1fr 1fr; }
+      .result-banner { grid-template-columns: auto 1fr; }
+      .result-score-box { display: none; }
+      .tab-btn span { display: none; }
+    }
+
+    /* ═══════════════════════════════════════════
+       FLOATING CHATBOT WIDGET & UTILITIES
+    ═══════════════════════════════════════════ */
+    .hidden { display: none !important; }
+
+    #chat-fab {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+      color: white; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(29, 78, 216, 0.4);
+      cursor: pointer; transition: transform .2s, box-shadow .2s;
+      border: none;
+    }
+    #chat-fab:hover { transform: scale(1.08); box-shadow: 0 10px 30px rgba(29, 78, 216, 0.5); }
+    .fab-dot { position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: #22c55e; border: 2px solid white; }
+
+    #chat-window {
+      position: fixed; bottom: 90px; right: 24px; z-index: 1000;
+      width: 380px; height: 520px; max-width: calc(100vw - 32px);
+      background: white; border-radius: 18px; border: 1px solid var(--border);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .chat-header {
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      padding: 14px 18px; display: flex; align-items: center; gap: 12px; color: white;
+    }
+    .chat-avatar { font-size: 24px; }
+    .chat-header-info { flex: 1; }
+    .chat-name { font-size: 14px; font-weight: 800; }
+    .chat-status { font-size: 11px; color: #93c5fd; display: flex; align-items: center; gap: 5px; }
+    .chat-online-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+    .chat-close { background: transparent; color: rgba(255,255,255,0.7); font-size: 16px; padding: 4px; border: none; cursor: pointer; }
+    .chat-close:hover { color: white; }
+
+    .chat-quick-btns { display: flex; gap: 6px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .quick-btn { background: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; color: var(--blue); white-space: nowrap; cursor: pointer; }
+    .quick-btn:hover { background: #eff6ff; }
+
+    .chat-messages { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; }
+    .chat-msg { display: flex; flex-direction: column; max-width: 85%; }
+    .chat-msg.user { align-self: flex-end; }
+    .chat-msg.bot { align-self: flex-start; }
+    .chat-bubble { padding: 10px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.5; color: var(--text); }
+    .chat-msg.user .chat-bubble { background: var(--blue); color: white; border-bottom-right-radius: 2px; }
+    .chat-msg.bot .chat-bubble { background: white; border: 1px solid var(--border); border-bottom-left-radius: 2px; box-shadow: var(--shadow-sm); }
+
+    .chat-input-row { display: flex; padding: 10px 14px; background: white; border-top: 1px solid var(--border); gap: 8px; }
+    .chat-input-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12.5px; outline: none; }
+    .chat-input-row button { background: var(--blue); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ════════════════════════════════════════════ -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-icon">🏦</div>
+    <div>
+      <span>LoanCheck India</span>
+      <small>AI-Powered Loan Approval Engine</small>
+    </div>
+  </div>
+  <div class="topbar-badges">
+    <span class="topbar-badge"><i class="fas fa-brain"></i> XGBoost ML</span>
+    <span class="topbar-badge">93.7% Accuracy</span>
+    <span class="topbar-badge">8 Banks Covered</span>
+  </div>
+</nav>
+
+<!-- ══ HERO ════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Instant <span>Loan Approval</span> Prediction<br>with Multi-Bank Analysis</h1>
+    <p>XGBoost ML model trained on 45,000+ applications. Get a fair, holistic decision using income, FOIR, employment history, and credit data.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val">93.7%</div><div class="lbl">Model Accuracy</div></div>
+      <div class="hero-stat"><div class="val">97.98%</div><div class="lbl">ROC-AUC Score</div></div>
+      <div class="hero-stat"><div class="val">8</div><div class="lbl">Banks Compared</div></div>
+      <div class="hero-stat"><div class="val">17</div><div class="lbl">Risk Factors</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ MAIN ════════════════════════════════════════════ -->
+<div class="main-layout">
+
+  <!-- ── SIDEBAR FORM ── -->
+  <aside class="sidebar-panel">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h2><i class="fas fa-file-alt"></i> &nbsp;Applicant Form</h2>
+        <p>All fields required · Predict only after filling everything</p>
+      </div>
+      <div class="form-body">
+
+        <!-- PERSONAL -->
+        <div class="section-label"><i class="fas fa-user"></i> Personal Details</div>
+        <div class="field">
+          <label>Age</label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="age-val">25</span>
+            <input type="range" id="age" min="18" max="70" value="25" oninput="document.getElementById('age-val').textContent=this.value; recalcLive();" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Gender</label>
+          <div class="select-wrap">
+            <select id="gender">
+              <option value="" disabled selected>— Select Gender —</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div class="validation-msg" id="err-gender">Please select your gender.</div>
+        </div>
+        <div class="field">
+          <label>Highest Education</label>
+          <div class="select-wrap">
+            <select id="education">
+              <option value="" disabled selected>— Select Education —</option>
+              <option value="HighSchool">High School</option>
+              <option value="Associate">Associate / Diploma</option>
+              <option value="Bachelor">Bachelor's Degree</option>
+              <option value="Master">Master's Degree</option>
+              <option value="Doctorate">Doctorate / PhD</option>
+            </select>
+          </div>
+          <div class="validation-msg" id="err-education">Please select your education level.</div>
+        </div>
+        <div class="field">
+          <label>Work Experience (years)</label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="emp-val">3 years</span>
+            <input type="range" id="emp_exp" min="0" max="40" value="3" oninput="document.getElementById('emp-val').textContent=this.value+' years'; recalcLive();" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Home Ownership</label>
+          <div class="select-wrap">
+            <select id="home_ownership">
+              <option value="" disabled selected>— Select Ownership —</option>
+              <option value="RENT">🏠 Renting</option>
+              <option value="MORTGAGE">🏦 Mortgage / Loan</option>
+              <option value="OWN">✅ Own Home</option>
+              <option value="OTHER">🔄 Other</option>
+            </select>
+          </div>
+          <div class="validation-msg" id="err-home_ownership">Please select home ownership.</div>
+        </div>
+        <div class="field">
+          <label>Credit History Length <span class="hint">(years since 1st credit)</span></label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="hist-val">5 years</span>
+            <input type="range" id="cred_hist" min="0" max="30" value="5" oninput="document.getElementById('hist-val').textContent=this.value+' years'; recalcLive();" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Previous Loan Default Record</label>
+          <div class="select-wrap">
+            <select id="had_default">
+              <option value="" disabled selected>— Select Status —</option>
+              <option value="No">✅ No — Clean Record</option>
+              <option value="ActiveDefault">❌ Yes — Active Default (Unpaid)</option>
+              <option value="Settled">⚠️ Settled — Negotiated Payoff</option>
+            </select>
+          </div>
+          <div class="validation-msg" id="err-had_default">Please select default status.</div>
+        </div>
+
+        <!-- FINANCIAL -->
+        <div class="section-label"><i class="fas fa-rupee-sign"></i> Financial Details</div>
+        <div class="field">
+          <label>Annual Income (₹)</label>
+          <input type="number" id="income_inr" placeholder="e.g. 600000" min="100000" max="50000000" step="10000" oninput="recalcLive()" />
+          <div class="validation-msg" id="err-income_inr">Please enter your annual income.</div>
+        </div>
+        <div class="field">
+          <label>Do you have a Co-Applicant?</label>
+          <div class="select-wrap">
+            <select id="has_coapplicant" onchange="toggleCoapplicantInput(); recalcLive();">
+              <option value="No" selected>👤 No — Single Applicant</option>
+              <option value="Yes">👥 Yes — Joint Application</option>
+            </select>
+          </div>
+        </div>
+        <div class="field hidden" id="coapplicant-wrap">
+          <label>Co-Applicant Annual Income (₹) <span class="hint">(Used in ML prediction & FOIR)</span></label>
+          <input type="number" id="co_applicant_income" placeholder="e.g. 300000" min="10000" max="50000000" step="10000" oninput="recalcLive()" />
+          <div class="validation-msg" id="err-co_applicant_income">Please enter co-applicant annual income.</div>
+
+          <label style="margin-top: 10px; display: block;">Co-Applicant Credit Default History</label>
+          <div class="select-wrap">
+            <select id="co_applicant_default">
+              <option value="No" selected>✅ No — Clean Credit History</option>
+              <option value="Settled">⚠️ Settled / Written-Off Loan</option>
+              <option value="ActiveDefault">❌ Active Default On File</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Loan Amount Requested (₹)</label>
+          <input type="number" id="loan_inr" placeholder="e.g. 500000" min="10000" max="10000000" step="10000" oninput="recalcLive()" />
+          <div class="validation-msg" id="err-loan_inr">Please enter the loan amount.</div>
+        </div>
+        <div class="field">
+          <label>Loan Purpose</label>
+          <div class="select-wrap">
+            <select id="loan_intent">
+              <option value="" disabled selected>— Select Purpose —</option>
+              <option value="Personal">💳 Personal Use</option>
+              <option value="Education">🎓 Education</option>
+              <option value="Medical">🏥 Medical / Health</option>
+              <option value="HomeImprovement">🏠 Home Improvement</option>
+              <option value="Business">💼 Business / Venture</option>
+              <option value="DebtConsolidation">🔄 Debt Consolidation</option>
+            </select>
+          </div>
+          <div class="validation-msg" id="err-loan_intent">Please select a loan purpose.</div>
+        </div>
+        <div class="field">
+          <label>Interest Rate <span class="hint">(% per annum)</span></label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="rate-val">11.5%</span>
+            <input type="range" id="int_rate" min="5" max="25" value="11.5" step="0.5" oninput="document.getElementById('rate-val').textContent=parseFloat(this.value).toFixed(1)+'%'; recalcLive();" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Loan Tenure</label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="tenure-val">36 months</span>
+            <input type="range" id="tenure_months" min="6" max="84" value="36" step="6" oninput="document.getElementById('tenure-val').textContent=this.value+' months'; recalcLive();" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Credit Score (CIBIL / Equifax)</label>
+          <div class="slider-wrap">
+            <span class="slider-val" id="credit-val">700 — Very Good</span>
+            <input type="range" id="credit_score" min="300" max="850" value="700" oninput="updateCreditLabel(this.value); recalcLive();" />
+          </div>
+        </div>
+
+        <button class="predict-btn" id="predict-btn" onclick="runPrediction()">
+          <span class="btn-text"><i class="fas fa-search"></i> &nbsp;Predict Loan Approval</span>
+          <i class="fas fa-circle-notch spin"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT PANEL ── -->
+  <main>
+
+    <!-- LIVE METRICS -->
+    <div class="metrics-strip" id="metrics-strip">
+      <div class="metric-card">
+        <div class="metric-icon">💰</div>
+        <div class="metric-val" id="m-income">₹—</div>
+        <div class="metric-label">Monthly Income</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📅</div>
+        <div class="metric-val" id="m-emi">₹—</div>
+        <div class="metric-label">Monthly EMI</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📊</div>
+        <div class="metric-val" id="m-foir">—%</div>
+        <div class="metric-label">FOIR Ratio</div>
+        <div id="m-foir-tag" class="metric-tag tag-blue">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📈</div>
+        <div class="metric-val" id="m-lti">—%</div>
+        <div class="metric-label">Loan vs Income</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💳</div>
+        <div class="metric-val" id="m-cibil">700</div>
+        <div class="metric-label">CIBIL Score</div>
+        <div id="m-cibil-tag" class="metric-tag tag-green">Very Good</div>
+      </div>
+    </div>
+
+    <!-- LANDING (before prediction) -->
+    <div id="landing-section">
+      <div class="landing-info">
+        <div class="landing-icon">🏦</div>
+        <h3>Ready to Check Your Eligibility?</h3>
+        <p>Fill in your financial profile on the left panel and click <strong>Predict Loan Approval</strong> to get a detailed AI-powered decision including bank-wise eligibility and improvement tips.</p>
+      </div>
+      <div class="step-cards">
+        <div class="step-card">
+          <div class="step-num" style="background:#2563eb">1</div>
+          <strong>Input Details</strong>
+          <p>Enter income, credit score, employment, and loan details in the form</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#7c3aed">2</div>
+          <strong>AI Analysis</strong>
+          <p>XGBoost ML + 17 risk factors + Indian bank rules evaluated holistically</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#0891b2">3</div>
+          <strong>Full Breakdown</strong>
+          <p>Risk scorecard, bank matrix (SBI/BOB/IOB/PNB/HDFC), and improvement tips</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div id="result-section" class="result-panel hidden">
+
+      <!-- Result Banner -->
+      <div id="result-banner" class="result-banner">
+        <div class="result-icon" id="r-icon">—</div>
+        <div>
+          <div class="result-title" id="r-title">—</div>
+          <div class="result-sub" id="r-sub">—</div>
+          <div class="prob-bar"><div class="prob-fill" id="r-probfill" style="width:0%"></div></div>
+        </div>
+        <div class="result-prob-box">
+          <div class="prob-lbl">Approval Probability</div>
+          <div class="prob-val" id="r-prob">—%</div>
+        </div>
+        <div class="result-score-box">
+          <div class="score-row">ML Model: <b id="r-ml">—%</b></div>
+          <div class="score-row">Bank Rules: <b id="r-hybrid">—</b></div>
+        </div>
+      </div>
+
+      <!-- Hard rejection alerts -->
+      <div id="hard-alerts"></div>
+
+      <!-- Tabs -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('score')" id="tab-score"><i class="fas fa-chart-bar"></i> <span>Risk Score</span></button>
+        <button class="tab-btn" onclick="switchTab('bank')" id="tab-bank"><i class="fas fa-university"></i> <span>Bank Matrix</span></button>
+        <button class="tab-btn" onclick="switchTab('whatif')" id="tab-whatif"><i class="fas fa-lightbulb"></i> <span>Optimizer</span></button>
+        <button class="tab-btn" onclick="switchTab('amort')" id="tab-amort"><i class="fas fa-chart-line"></i> <span>Amortization</span></button>
+      </div>
+
+      <div class="tab-content">
+
+        <!-- TAB 1: SCORE -->
+        <div class="tab-pane active" id="pane-score">
+          <div class="grid-2">
+            <div>
+              <div class="section-title"><i class="fas fa-sliders-h"></i> Weighted Risk Factors</div>
+              <div id="factor-bars"></div>
+            </div>
+            <div>
+              <div class="section-title"><i class="fas fa-table"></i> Risk Scorecard</div>
+              <div class="scorecard">
+                <div class="scorecard-head"><span>Factor</span><span>Your Value</span><span>Status</span></div>
+                <div id="scorecard-rows"></div>
+              </div>
+            </div>
+          </div>
+          <hr class="divider">
+          <div class="section-title"><i class="fas fa-balance-scale"></i> Profile Strengths & Risk Flags</div>
+          <div class="sr-grid" id="sr-grid"></div>
+        </div>
+
+        <!-- TAB 2: BANK MATRIX -->
+        <div class="tab-pane" id="pane-bank">
+          <div class="section-title"><i class="fas fa-university"></i> Multi-Bank Eligibility Matrix</div>
+          <p class="text-sm mb-4">Real-world criteria from 4 nationalised banks (SBI, BOB, IOB, PNB) and 4 private lenders evaluated against your profile.</p>
+          <div class="bank-grid" id="bank-grid"></div>
+        </div>
+
+        <!-- TAB 3: WHAT-IF OPTIMIZER -->
+        <div class="tab-pane" id="pane-whatif">
+          <div class="section-title"><i class="fas fa-magic"></i> Counterfactual Loan Optimizer</div>
+          <p class="text-sm mb-4">Actionable steps calculated from your specific numbers to convert a rejection into approval.</p>
+          <div class="whatif-grid" id="whatif-grid"></div>
+        </div>
+
+        <!-- TAB 4: AMORTIZATION -->
+        <div class="tab-pane" id="pane-amort">
+          <div class="section-title"><i class="fas fa-chart-area"></i> Loan Repayment Breakdown</div>
+          <div class="grid-2">
+            <div id="amort-summary"></div>
+            <div class="chart-wrap"><canvas id="amort-chart"></canvas></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /result-section -->
+
+  </main>
+</div>
+
+<!-- ══ FLOATING CHATBOT ════════════════════════════════ -->
+<button id="chat-fab" onclick="toggleChat()" aria-label="Open AI Loan Assistant">
+  <i class="fas fa-comments"></i>
+  <span class="fab-dot"></span>
+</button>
+
+<div id="chat-window" class="hidden">
+  <div class="chat-header">
+    <div class="chat-avatar">🤖</div>
+    <div class="chat-header-info">
+      <div class="chat-name">AI Loan Assistant</div>
+      <div class="chat-status"><span class="chat-online-dot"></span> Live — Context Aware</div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="chat-quick-btns">
+    <button class="quick-btn" onclick="quickAsk('What is FOIR?')">FOIR?</button>
+    <button class="quick-btn" onclick="quickAsk('What are SBI requirements?')">SBI Rules?</button>
+    <button class="quick-btn" onclick="quickAsk('How to improve CIBIL?')">Improve CIBIL</button>
+    <button class="quick-btn" onclick="quickAsk('Why was I rejected?')">My Chances</button>
+    <button class="quick-btn" onclick="quickAsk('Documents required?')">Documents</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">
+      <div class="chat-bubble">👋 <strong>Hello!</strong> I'm your AI Loan Assistant.<br><br>Ask me about bank requirements, CIBIL scores, FOIR, or hit <strong>Predict</strong> above and I'll analyse your live profile!</div>
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <input id="chat-input" type="text" placeholder="Ask about loans, CIBIL, FOIR…" onkeydown="if(event.key==='Enter') sendChat()" />
+    <button id="chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<!-- ══ JAVASCRIPT ════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────────────── */
+const fmt = (v) => '₹' + Math.round(v).toLocaleString('en-IN');
+const pct = (v) => v.toFixed(1) + '%';
+
+function creditLabel(s) {
+  if (s < 580) return 'Poor';
+  if (s < 640) return 'Fair';
+  if (s < 700) return 'Good';
+  if (s < 750) return 'Very Good';
+  return 'Excellent';
+}
+function updateCreditLabel(v) {
+  document.getElementById('credit-val').textContent = v + ' — ' + creditLabel(parseInt(v));
+}
+
+function calcEMI(p, r_pct, n) {
+  if (!n || !p) return 0;
+  const r = (r_pct / 12) / 100;
+  if (r === 0) return p / n;
+  const fac = Math.pow(1 + r, n);
+  return p * r * fac / (fac - 1);
+}
+
+function toggleCoapplicantInput() {
+  const isJoint = document.getElementById('has_coapplicant').value === 'Yes';
+  const wrap = document.getElementById('coapplicant-wrap');
+  if (isJoint) {
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+    document.getElementById('co_applicant_income').value = '';
+    document.getElementById('err-co_applicant_income')?.classList.remove('show');
+    document.getElementById('co_applicant_income')?.classList.remove('invalid');
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   LIVE METRIC RECALC (no prediction, just display)
+───────────────────────────────────────────────────── */
+function recalcLive() {
+  const applicantIncome   = parseFloat(document.getElementById('income_inr').value) || 0;
+  const isJoint           = document.getElementById('has_coapplicant').value === 'Yes';
+  const coApplicantIncome = isJoint ? (parseFloat(document.getElementById('co_applicant_income').value) || 0) : 0;
+  const income            = applicantIncome + coApplicantIncome;
+  const loan              = parseFloat(document.getElementById('loan_inr').value) || 0;
+  const rate              = parseFloat(document.getElementById('int_rate').value) || 0;
+  const tenure            = parseInt(document.getElementById('tenure_months').value) || 0;
+  const cibil             = parseInt(document.getElementById('credit_score').value) || 700;
+
+  const monthly = income / 12;
+  const emi     = calcEMI(loan, rate, tenure);
+  const foir    = monthly > 0 ? (emi / monthly * 100) : 0;
+  const lti     = income > 0 ? (loan / income * 100) : 0;
+
+  document.getElementById('m-income').textContent = income ? fmt(monthly) : '₹—';
+  document.getElementById('m-emi').textContent    = emi > 0 ? fmt(emi) : '₹—';
+  document.getElementById('m-foir').textContent   = income && loan ? pct(foir) : '—%';
+  document.getElementById('m-lti').textContent    = income && loan ? pct(lti) : '—%';
+  document.getElementById('m-cibil').textContent  = cibil;
+  document.getElementById('m-cibil-tag').textContent = creditLabel(cibil);
+
+  const foirTag = document.getElementById('m-foir-tag');
+  foirTag.className = 'metric-tag ' + (foir <= 40 ? 'tag-green' : foir <= 55 ? 'tag-amber' : 'tag-red');
+  foirTag.textContent = foir <= 40 ? '✅ Ideal' : foir <= 55 ? '⚠️ Marginal' : '❌ High';
+}
+
+/* ─────────────────────────────────────────────────────
+   VALIDATION
+───────────────────────────────────────────────────── */
+function validate() {
+  const selectFields = ['gender', 'education', 'home_ownership', 'had_default', 'loan_intent'];
+  const numFields    = ['income_inr', 'loan_inr'];
+  let ok = true;
+
+  selectFields.forEach(id => {
+    const el = document.getElementById(id);
+    const err = document.getElementById('err-' + id);
+    if (!el.value) {
+      el.classList.add('invalid'); err.classList.add('show'); ok = false;
+    } else {
+      el.classList.remove('invalid'); err.classList.remove('show');
+    }
+  });
+
+  numFields.forEach(id => {
+    const el = document.getElementById(id);
+    const err = document.getElementById('err-' + id);
+    if (!el.value || parseFloat(el.value) <= 0) {
+      el.classList.add('invalid'); err.classList.add('show'); ok = false;
+    } else {
+      el.classList.remove('invalid'); err.classList.remove('show');
+    }
+  });
+
+  if (document.getElementById('has_coapplicant').value === 'Yes') {
+    const coEl = document.getElementById('co_applicant_income');
+    const coErr = document.getElementById('err-co_applicant_income');
+    if (!coEl.value || parseFloat(coEl.value) <= 0) {
+      coEl.classList.add('invalid'); coErr.classList.add('show'); ok = false;
+    } else {
+      coEl.classList.remove('invalid'); coErr.classList.remove('show');
+    }
+  }
+
+  return ok;
+}
+
+/* ─────────────────────────────────────────────────────
+   PREDICTION
+───────────────────────────────────────────────────── */
+let lastCtx = {};
+
+async function runPrediction() {
+  if (!validate()) return;
+
+  const btn = document.getElementById('predict-btn');
+  btn.classList.add('loading');
+
+  const isJoint = document.getElementById('has_coapplicant').value === 'Yes';
+  const payload = {
+    income_inr:          parseFloat(document.getElementById('income_inr').value),
+    has_coapplicant:     document.getElementById('has_coapplicant').value,
+    co_applicant_income: isJoint ? (parseFloat(document.getElementById('co_applicant_income').value) || 0) : 0,
+    co_applicant_default:isJoint ? document.getElementById('co_applicant_default').value : 'No',
+    loan_inr:            parseFloat(document.getElementById('loan_inr').value),
+    int_rate:            parseFloat(document.getElementById('int_rate').value),
+    tenure_months:       parseInt(document.getElementById('tenure_months').value),
+    credit_score:        parseInt(document.getElementById('credit_score').value),
+    cred_hist:           parseInt(document.getElementById('cred_hist').value),
+    emp_exp:             parseFloat(document.getElementById('emp_exp').value),
+    person_age:          parseInt(document.getElementById('age').value),
+    gender:              document.getElementById('gender').value,
+    education:           document.getElementById('education').value,
+    home_ownership:      document.getElementById('home_ownership').value,
+    loan_intent:         document.getElementById('loan_intent').value,
+    had_default:         document.getElementById('had_default').value,
+  };
+
+  const res  = await fetch('/predict', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  const data = await res.json();
+  btn.classList.remove('loading');
+
+  lastCtx = {
+    has_result: true,
+    approved: data.approved,
+    prob: data.display_prob,
+    foir: data.metrics.foir_pct,
+    cibil: payload.credit_score,
+    income: data.metrics.monthly_inr
+  };
+
+  renderResult(data, payload);
+}
+
+/* ─────────────────────────────────────────────────────
+   RENDER RESULT
+───────────────────────────────────────────────────── */
+let amortChartInstance = null;
+
+function renderResult(data, payload) {
+  document.getElementById('landing-section').style.display = 'none';
+  const rs = document.getElementById('result-section');
+  rs.classList.remove('hidden');
+
+  // Banner
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner ' + (data.approved ? 'approved' : 'rejected');
+  document.getElementById('r-icon').textContent   = data.approved ? '✅' : '❌';
+  document.getElementById('r-title').textContent  = data.approved ? 'LIKELY APPROVED' : 'LIKELY REJECTED';
+  document.getElementById('r-sub').textContent    = data.approved
+    ? 'Your application meets the key eligibility criteria across major Indian lenders.'
+    : 'Your application has one or more risk factors below acceptable thresholds.';
+  document.getElementById('r-prob').textContent   = data.display_prob.toFixed(1) + '%';
+  document.getElementById('r-ml').textContent     = data.ml_prob.toFixed(1) + '%';
+  document.getElementById('r-hybrid').textContent = data.hybrid.toFixed(1) + ' pts';
+  setTimeout(() => {
+    document.getElementById('r-probfill').style.width = Math.min(data.display_prob, 100) + '%';
+  }, 100);
+
+  // Hard alerts
+  const ha = document.getElementById('hard-alerts');
+  ha.innerHTML = '';
+  if (data.hard_reject) {
+    data.hard_reasons.forEach(r => {
+      ha.innerHTML += `<div class="hard-alert"><i class="fas fa-exclamation-triangle"></i>${r}</div>`;
+    });
+  }
+
+  // Factor bars
+  const FACTOR_DEFS = [
+    { key: 'default_pts', label: 'Default History',  icon: '🛡️', weight: '20%' },
+    { key: 'income_pts',  label: 'Income Level',     icon: '💰', weight: '20%' },
+    { key: 'foir_pts',    label: 'FOIR Burden',       icon: '📊', weight: '15%' },
+    { key: 'credit_pts',  label: 'Credit Score',     icon: '💳', weight: '15%' },
+    { key: 'emp_pts',     label: 'Employment',        icon: '💼', weight: '15%' },
+    { key: 'lti_pts',     label: 'Loan-to-Income',   icon: '📈', weight: '10%' },
+    { key: 'hist_pts',    label: 'Credit History',   icon: '📅', weight: '5%' },
+  ];
+  const fb = document.getElementById('factor-bars');
+  fb.innerHTML = '';
+  FACTOR_DEFS.forEach(f => {
+    const pts = data.factors[f.key];
+    const cls = pts >= 75 ? 'fill-green' : pts >= 45 ? 'fill-amber' : 'fill-red';
+    const col = pts >= 75 ? '#16a34a' : pts >= 45 ? '#d97706' : '#dc2626';
+    fb.innerHTML += `
+      <div class="factor-row">
+        <div class="factor-header">
+          <span>${f.icon} ${f.label} <span class="text-sm" style="font-size:10.5px;">(${f.weight})</span></span>
+          <span class="factor-score" style="color:${col}">${pts}/100</span>
+        </div>
+        <div class="factor-bar"><div class="factor-fill ${cls}" style="width:${pts}%"></div></div>
+      </div>`;
+  });
+
+  // Scorecard
+  const m = data.metrics;
+  const scorecardRows = [
+    { name: 'Default Record', val: payload.had_default === 'No' ? 'Clean' : payload.had_default === 'ActiveDefault' ? 'Active Default' : 'Settled', status: payload.had_default === 'No' ? '✅ Clean' : payload.had_default === 'ActiveDefault' ? '❌ Auto-Reject' : '⚠️ High Risk', col: payload.had_default === 'No' ? '#16a34a' : '#dc2626' },
+    { name: 'CIBIL Score', val: `${payload.credit_score} (${m.credit_label})`, status: payload.credit_score >= 700 ? '✅ Good' : payload.credit_score >= 640 ? '⚠️ Fair' : '❌ Poor', col: m.credit_color },
+    { name: 'Monthly Income', val: fmt(m.monthly_inr), status: m.monthly_inr >= 25000 ? '✅ Adequate' : '⚠️ Low', col: m.monthly_inr >= 25000 ? '#16a34a' : '#d97706' },
+    { name: 'FOIR', val: pct(m.foir_pct), status: m.foir_pct <= 40 ? '✅ Ideal' : m.foir_pct <= 55 ? '⚠️ Borderline' : '❌ High', col: m.foir_pct <= 40 ? '#16a34a' : m.foir_pct <= 55 ? '#d97706' : '#dc2626' },
+    { name: 'Loan-to-Income', val: pct(m.lpi_pct), status: m.lpi_pct <= 35 ? '✅ Safe' : '⚠️ Elevated', col: m.lpi_pct <= 35 ? '#16a34a' : '#d97706' },
+    { name: 'Employment', val: `${payload.emp_exp} yrs`, status: payload.emp_exp >= 3 ? '✅ Stable' : payload.emp_exp >= 1 ? '⚠️ Moderate' : '❌ Too Short', col: payload.emp_exp >= 3 ? '#16a34a' : payload.emp_exp >= 1 ? '#d97706' : '#dc2626' },
+  ];
+  const sr = document.getElementById('scorecard-rows');
+  sr.innerHTML = '';
+  scorecardRows.forEach(r => {
+    sr.innerHTML += `<div class="scorecard-row"><span class="sc-name">${r.name}</span><span class="sc-val">${r.val}</span><span class="sc-status" style="color:${r.col}">${r.status}</span></div>`;
+  });
+
+  // Strengths & Risks
+  const srGrid = document.getElementById('sr-grid');
+  const strengths = data.strengths, risks = data.risks;
+  srGrid.innerHTML = `
+    <div class="sr-card strengths">
+      <div class="sr-title"><i class="fas fa-check-circle"></i> Strengths (${strengths.length})</div>
+      ${strengths.length ? strengths.map(s => `<div class="sr-item"><i class="fas fa-check"></i>${s}</div>`).join('') : '<div class="text-sm">No major strengths identified.</div>'}
+    </div>
+    <div class="sr-card risks">
+      <div class="sr-title"><i class="fas fa-exclamation-circle"></i> Risk Flags (${risks.length})</div>
+      ${risks.length ? risks.map(r => `<div class="sr-item"><i class="fas fa-times"></i>${r}</div>`).join('') : '<div class="text-sm" style="color:#16a34a">🎉 No major risk flags — exceptional profile!</div>'}
+    </div>`;
+
+  // Bank Matrix
+  const bankGrid = document.getElementById('bank-grid');
+  bankGrid.innerHTML = '';
+  data.bank_results.forEach(b => {
+    const badgeClass = { eligible: 'badge-eligible', borderline: 'badge-borderline', ineligible: 'badge-ineligible' }[b.status];
+    const badgeText  = { eligible: '✅ Eligible', borderline: '⚠️ Borderline', ineligible: '❌ Ineligible' }[b.status];
+    const reasonsHtml = b.reasons.length ? `<div class="bank-reasons"><i class="fas fa-info-circle"></i> ${b.reasons.join(' · ')}</div>` : '';
+    bankGrid.innerHTML += `
+      <div class="bank-card ${b.status}">
+        <div class="bank-top">
+          <div>
+            <div class="bank-name">${b.icon} ${b.name} <span style="font-size:10px;color:#94a3b8;font-weight:500;">(${b.short})</span></div>
+            <div class="bank-type">${b.type}</div>
+          </div>
+          <span class="bank-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="bank-info">
+          <span>Interest Rate: <b>${b.rate}</b></span>
+          <span>Processing Fee: <b>${b.fee}</b></span>
+        </div>
+        ${reasonsHtml}
+      </div>`;
+  });
+
+  // What-If
+  const wg = document.getElementById('whatif-grid');
+  wg.innerHTML = '';
+  const icons = { green: '📉', blue: '💸', amber: '📈', purple: '👥' };
+  data.whatif.forEach(w => {
+    wg.innerHTML += `
+      <div class="whatif-card ${w.type}">
+        <div class="whatif-icon">${icons[w.type] || '💡'}</div>
+        <div>
+          <div class="whatif-title">${w.title}</div>
+          <div class="whatif-desc">${w.desc}</div>
+        </div>
+      </div>`;
+  });
+
+  // Amortization
+  const amortSummary = document.getElementById('amort-summary');
+  amortSummary.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;height:100%;justify-content:center;">
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px 18px;">
+        <div style="font-size:11px;font-weight:700;color:#0284c7;text-transform:uppercase;letter-spacing:.06em;">Principal</div>
+        <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:2px;">${fmt(payload.loan_inr)}</div>
+      </div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;">
+        <div style="font-size:11px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:.06em;">Total Interest</div>
+        <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:2px;">${fmt(m.total_interest)}</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;">
+        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.06em;">Total Repayment</div>
+        <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:2px;">${fmt(m.total_repayment)}</div>
+      </div>
+    </div>`;
+
+  const labels = data.amort.map(a => a.month === 0 ? 'Start (M0)' : `M${a.month}`);
+  const balances  = data.amort.map(a => a.balance);
+  const interestP = data.amort.map(a => a.total_interest);
+
+  if (amortChartInstance) { amortChartInstance.destroy(); }
+  const ctx2 = document.getElementById('amort-chart').getContext('2d');
+  amortChartInstance = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Outstanding Balance', data: balances, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', fill: true, tension: .4, pointRadius: 3, borderWidth: 2 },
+        { label: 'Cumulative Interest', data: interestP, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.08)', fill: true, tension: .4, pointRadius: 3, borderWidth: 2, borderDash: [4,3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11, family: 'Plus Jakarta Sans' }, boxWidth: 12 } } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, maxTicksLimit: 8 }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 }, callback: v => '₹' + (v >= 100000 ? (v/100000).toFixed(1) + 'L' : (v/1000).toFixed(0) + 'k') }, grid: { color: '#f1f5f9' } }
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────────────── */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('pane-' + name).classList.add('active');
+}
+
+/* ─────────────────────────────────────────────────────
+   FLOATING CHATBOT
+───────────────────────────────────────────────────── */
+function toggleChat() {
+  const win = document.getElementById('chat-window');
+  if (win.classList.contains('hidden')) {
+    win.classList.remove('hidden');
+    win.style.animation = 'chatOpen .35s cubic-bezier(.34,1.56,.64,1)';
+    document.getElementById('chat-input').focus();
+  } else {
+    win.classList.add('hidden');
+  }
+}
+
+function quickAsk(q) {
+  document.getElementById('chat-input').value = q;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendMsg('user', msg);
+  const typingId = appendTyping();
+
+  const res = await fetch('/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: msg, context: lastCtx })
+  });
+  const data = await res.json();
+
+  removeTyping(typingId);
+  appendMsg('bot', data.reply);
+}
+
+function appendMsg(role, text) {
+  const wrap = document.getElementById('chat-messages');
+  const bubble = formatChatText(text);
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  div.innerHTML = `<div class="chat-bubble">${bubble}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function appendTyping() {
+  const wrap = document.getElementById('chat-messages');
+  const id = 'typing-' + Date.now();
+  wrap.innerHTML += `<div id="${id}" class="chat-msg bot"><div class="chat-bubble typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  wrap.scrollTop = wrap.scrollHeight;
+  return id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+function formatChatText(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+    .replace(/•\s?/g, '• ');
+}
+
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
+recalcLive();
+</script>
+</body>
+</html>
