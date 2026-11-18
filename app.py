@@ -139,13 +139,25 @@ header[data-testid="stHeader"] {
 [data-testid="stMain"] p,
 [data-testid="stMain"] span:not([style*="color: white"]):not([style*="color:white"]),
 [data-testid="stMain"] label,
-[data-testid="stMain"] h1,
+[data-testid="stMain"] h1:not(.hero-title),
 [data-testid="stMain"] h2,
 [data-testid="stMain"] h3,
 [data-testid="stMain"] h4,
 [data-testid="stMain"] h5,
 [data-testid="stMain"] h6 {
   color: #0f172a !important;
+}
+
+/* ── Hero Header Banner Pure White Text ── */
+.hero-header-banner,
+.hero-header-banner *,
+.hero-header-banner h1,
+.hero-title,
+h1.hero-title,
+[data-testid="stMain"] h1.hero-title,
+[data-testid="stMain"] .hero-title,
+[data-testid="stMain"] .hero-header-banner * {
+  color: #ffffff !important;
 }
 
 /* ── Metric Cards ── */
@@ -704,7 +716,7 @@ if "chat_open" not in st.session_state:
 # TOP HEADER BAR
 # ============================================================
 st.markdown("""
-<div style="
+<div class="hero-header-banner" style="
   background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
   border-radius: 18px;
   padding: 24px 32px;
@@ -718,8 +730,8 @@ st.markdown("""
   <div>
     <div style="display:flex;align-items:center;gap:12px">
       <span style="font-size:32px">🏦</span>
-      <h1 style="color:white !important;margin:0;font-size:1.9rem;font-weight:800;
-                 letter-spacing:-0.02em;font-family:'Plus Jakarta Sans',sans-serif;">
+      <h1 class="hero-title" style="color:#ffffff !important;margin:0;font-size:1.9rem;font-weight:800;
+                 letter-spacing:-0.02em;font-family:'Plus Jakarta Sans',sans-serif;text-shadow:0 2px 8px rgba(0,0,0,0.3);">
         LoanCheck India — AI Loan Approval & Multi-Bank Engine
       </h1>
     </div>
