@@ -134,7 +134,22 @@ header[data-testid="stHeader"] {
   font-weight: 600 !important;
 }
 
+/* ── Main Content Dark Text Enforcement ── */
+[data-testid="stMain"],
+[data-testid="stMain"] p,
+[data-testid="stMain"] span:not([style*="color: white"]):not([style*="color:white"]),
+[data-testid="stMain"] label,
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3,
+[data-testid="stMain"] h4,
+[data-testid="stMain"] h5,
+[data-testid="stMain"] h6 {
+  color: #0f172a !important;
+}
+
 /* ── Metric Cards ── */
+[data-testid="stMetric"],
 [data-testid="metric-container"] {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
@@ -143,17 +158,14 @@ header[data-testid="stHeader"] {
   box-shadow: 0 2px 6px rgba(0,0,0,.04) !important;
   transition: transform .2s, box-shadow .2s !important;
 }
+[data-testid="stMetric"]:hover,
 [data-testid="metric-container"]:hover {
   box-shadow: 0 6px 16px rgba(0,0,0,.08) !important;
   transform: translateY(-2px);
 }
-div[data-testid="metric-container"] *,
-div[data-testid="metric-container"] div,
-div[data-testid="metric-container"] span,
-div[data-testid="metric-container"] p {
-  color: #0f172a !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
+[data-testid="stMetricLabel"],
+[data-testid="stMetricLabel"] *,
+[data-testid="stMetricLabel"] p,
 div[data-testid="metric-container"] [data-testid="stMetricLabel"] * {
   color: #64748b !important;
   font-size: 11px !important;
@@ -161,10 +173,18 @@ div[data-testid="metric-container"] [data-testid="stMetricLabel"] * {
   text-transform: uppercase !important;
   letter-spacing: .06em !important;
 }
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] *,
+[data-testid="stMetricValue"] div,
 div[data-testid="metric-container"] [data-testid="stMetricValue"] * {
   color: #0f172a !important;
   font-size: 22px !important;
   font-weight: 800 !important;
+}
+[data-testid="stMetricDelta"],
+[data-testid="stMetricDelta"] * {
+  font-size: 12px !important;
+  font-weight: 700 !important;
 }
 
 /* ── Progress Bar ── */
@@ -183,102 +203,93 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] * {
   height: 44px !important;
   white-space: pre !important;
   border-radius: 10px 10px 0 0 !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-bottom: none !important;
   padding: 0 18px !important;
 }
+.stTabs [data-baseweb="tab"] *,
+.stTabs [data-baseweb="tab"] p,
+.stTabs [data-baseweb="tab"] span {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
 .stTabs [aria-selected="true"] {
+  background: #ffffff !important;
+  border-top: 3px solid #1d4ed8 !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+.stTabs [aria-selected="true"] *,
+.stTabs [aria-selected="true"] p,
+.stTabs [aria-selected="true"] span {
   color: #1d4ed8 !important;
-  border-bottom: 3px solid #1d4ed8 !important;
-  background: white !important;
+  font-weight: 800 !important;
 }
 
-/* ── FLOATING CHATBOT STYLING ── */
-.floating-chat-toggle {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 999999;
+/* ── Floating FAB Button (Bottom-Right) ── */
+div[class*="st-key-floating_fab_box"] {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
 }
-.chat-fab-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.45);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid rgba(255,255,255,0.3);
+div[class*="st-key-floating_fab_box"] button {
+  background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%) !important;
+  color: white !important;
+  border-radius: 99px !important;
+  padding: 10px 22px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.45) !important;
+  transition: all 0.25s ease !important;
 }
-.chat-fab-btn:hover {
-  transform: scale(1.08) translateY(-2px);
-  box-shadow: 0 12px 30px rgba(29, 78, 216, 0.6);
+div[class*="st-key-floating_fab_box"] button:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 12px 30px rgba(29, 78, 216, 0.6) !important;
 }
 
-/* Floating Window Card */
-.chat-floating-card {
-  position: fixed;
-  bottom: 92px;
-  right: 24px;
-  width: 390px;
-  max-width: calc(100vw - 32px);
-  height: 530px;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22);
-  z-index: 999998;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: slideUp 0.3s ease-out;
+/* ── Floating Chat Popup Card ── */
+div[class*="st-key-floating_chat_popup"] {
+  position: fixed !important;
+  bottom: 82px !important;
+  right: 24px !important;
+  width: 400px !important;
+  max-width: calc(100vw - 32px) !important;
+  height: 540px !important;
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.3) !important;
+  border: 1px solid #cbd5e1 !important;
+  z-index: 999998 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 14px !important;
+  overflow: hidden !important;
+  animation: slideUp 0.25s ease-out !important;
 }
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.chat-card-header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-  color: white;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+div[class*="st-key-floating_chat_popup"] [data-testid="stChatMessage"] {
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  margin-bottom: 6px !important;
 }
-.chat-card-body {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  background: #f8fafc;
+div[class*="st-key-floating_chat_popup"] [data-testid="stChatMessage"] p {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0 !important;
 }
-.chat-msg-user {
-  background: #2563eb;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 14px 14px 2px 14px;
-  font-size: 13px;
-  margin-left: 20%;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(37,99,235,0.25);
-}
-.chat-msg-bot {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
-  padding: 12px 15px;
-  border-radius: 14px 14px 14px 2px;
-  font-size: 13px;
-  margin-right: 15%;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  line-height: 1.5;
+div[class*="st-key-floating_chat_popup"] button {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
 }
 
 /* Hide Streamlit elements in sidebar header */
@@ -548,7 +559,7 @@ def get_context_chat_response(msg, context_data=None):
     msg_clean = msg.lower().strip()
     
     # 1. Personal Context Specific Queries
-    if any(k in msg_clean for k in ["my status", "my chances", "my loan", "why rejected", "will i get approved"]):
+    if any(k in msg_clean for k in ["my status", "my chances", "my loan", "why rejected", "will i", "chances", "eligible", "eligibility", "my profile"]):
         if context_data and context_data.get("calculated"):
             c = context_data
             status_text = "LIKELY APPROVED" if c["approved"] else "LIKELY REJECTED"
@@ -559,65 +570,125 @@ def get_context_chat_response(msg, context_data=None):
             response += f"• **Monthly Income:** ₹{c['monthly_inr']:,.0f}\n\n"
             
             if not c["approved"]:
-                response += "**Recommendations to get Approved:**\n"
+                response += "**Quick fixes to get approved:**\n"
                 if c["foir_pct"] > 40:
-                    response += "1. Lower your monthly EMI by extending tenure or reducing loan amount.\n"
+                    response += "• Lower your monthly EMI by extending loan tenure or reducing loan amount.\n"
                 if c["credit_score"] < 700:
-                    response += "2. Improve CIBIL score above 700 by clearing outstanding dues.\n"
+                    response += "• Clear credit card dues to bring CIBIL above 700.\n"
                 if c["had_default"] != "No":
-                    response += "3. Resolve default record and obtain a No Dues Certificate.\n"
+                    response += "• Obtain a No Dues Certificate (NDC) for your default record.\n"
+                response += "• Consider applying with a co-applicant to pool incomes.\n"
             else:
-                response += "🎉 Your profile looks strong! You are eligible for competitive interest rates from SBI, PNB, BOB, and HDFC."
+                response += "🎉 Your profile is strong! You meet eligibility benchmarks for SBI, BOB, IOB, PNB, and HDFC."
             return response
+        return "Please fill in the applicant details in the sidebar to analyze your live profile."
 
     # 2. Nationalised Banks Info
-    if any(k in msg_clean for k in ["bob", "bank of baroda", "iob", "indian overseas bank", "pnb", "punjab national bank", "sbi", "nationalised bank", "government bank"]):
-        return """**🏛️ Public & Nationalised Banks Baseline (SBI, BOB, IOB, PNB):**
+    if any(k in msg_clean for k in ["bob", "bank of baroda", "iob", "indian overseas bank", "pnb", "punjab national bank", "sbi", "state bank", "nationalised", "government bank", "public bank"]):
+        return """**🏛️ Public & Nationalised Banks (SBI, BOB, IOB, PNB):**
 
 • **Min Monthly Income:** ₹15,000/month  
-• **Target CIBIL Score:** 680–700+  
+• **Target CIBIL Score:** 675–700+  
 • **Max FOIR Limit:** 50%  
-• **Interest Rate Range:** ~10.90% to 15.30%  
-• **Advantages:** Lower interest rates, transparent terms, no hidden fees, flexible tenure up to 72 months."""
+• **Interest Rate Range:** 10.90% to 15.30%  
+• **Advantages:** Lower interest rates, transparent terms, no hidden fees, flexible tenure up to 72–84 months."""
 
-    # 3. Credit Score Query
+    # 3. Private Banks Info
+    if any(k in msg_clean for k in ["hdfc", "icici", "axis", "private bank"]):
+        return """**🏦 Private Banks (HDFC, ICICI, Axis):**
+
+• **Min Monthly Income:** ₹25,000 (HDFC/ICICI), ₹15,000 (Axis)  
+• **Target CIBIL:** 700–720+  
+• **Max FOIR:** 50%–55%  
+• **Interest Rates:** 10.50% to 22.00%  
+• **Advantage:** Quick digital approvals and fast disbursal within 24–48 hours."""
+
+    # 4. Credit Score Query
     if any(k in msg_clean for k in ["credit score", "cibil", "credit rating"]):
-        return """**📊 CIBIL Credit Score Bands in India:**
+        return """**📊 CIBIL Credit Score Bands:**
 
-• **750–900 (Excellent):** Instant approval, lowest interest rates (~10.5%–11.5%).  
-• **700–749 (Good):** Standard approval at most nationalised & private banks.  
-• **640–699 (Fair):** Possible approval with higher interest rate (~14%–18%).  
-• **< 640 (Poor/Default):** High rejection risk.
+• **750+ (Excellent):** Instant approval, lowest interest rates (~10.5%–11.5%).  
+• **700–749 (Good):** Standard approval at nationalised & private banks.  
+• **640–699 (Fair):** Possible approval with higher interest (~14%–18%).  
+• **< 640 (Poor):** High risk of rejection.
 
-*Tip: Keep credit card utilization below 30% to quickly boost your score.*"""
+*Tip: Keep credit card balance below 30% of your credit limit to boost CIBIL.*"""
 
-    # 4. FOIR Query
-    if any(k in msg_clean for k in ["foir", "fixed obligation", "debt ratio"]):
+    # 5. FOIR Query
+    if any(k in msg_clean for k in ["foir", "fixed obligation", "debt ratio", "debt-to-income"]):
         return """**💰 FOIR (Fixed Obligation to Income Ratio):**
 
 `FOIR = (Total Existing & Proposed EMIs ÷ Net Monthly Income) × 100`
 
-• **≤ 40%:** Ideal (Highest approval probability) ✅  
-• **40% – 50%:** Moderate / Standard Zone ⚠️  
-• **> 50%:** High Risk Zone / Rejection likely at SBI, PNB, BOB ❌"""
+• **≤ 40%:** Ideal zone (Highest approval odds) ✅  
+• **40% – 50%:** Borderline / Case-by-case ⚠️  
+• **> 50%:** High risk / Likely rejection at SBI, PNB, BOB ❌  
 
-    # 5. Default Query
-    if any(k in msg_clean for k in ["default", "missed payment", "settled", "cibil defaulter"]):
-        return """**⚠️ Impact of Past Default / Settlement:**
+*Tip: Increasing tenure lowers EMI and immediately improves your FOIR!*"""
 
-• **Active Unpaid Default:** Automatic rejection across 100% of Indian banks.  
-• **Settled Account:** Treated as high risk. Can be approved if CIBIL is >700, income is high, and FOIR is <40%.  
-• **Recovery Step:** Clear dues → Obtain No Dues Certificate (NDC) → Request bank to update CIBIL status."""
+    # 6. EMI Query
+    if any(k in msg_clean for k in ["emi", "monthly payment", "installment"]):
+        return """**📅 EMI Calculation:**
 
-    # 6. Default Fallback
+`EMI = P × r × (1+r)ⁿ ÷ ((1+r)ⁿ − 1)`
+
+Where **P** = Principal, **r** = Monthly rate, **n** = Tenure in months.  
+*Tip: Keep your total EMIs under 40% of your monthly salary for best approval odds.*"""
+
+    # 7. Default Query
+    if any(k in msg_clean for k in ["default", "missed payment", "settled", "cibil defaulter", "overdue", "npa"]):
+        return """**⚠️ Past Default & Settlement Impact:**
+
+• **Active Default:** Automatic rejection across 100% of Indian banks.  
+• **Settled Account:** High risk; can be approved if CIBIL is >700, income is high, and FOIR is <40%.  
+• **Recovery Steps:** Clear outstanding dues → Obtain No Dues Certificate (NDC) → Request bank to update CIBIL status to 'Closed'."""
+
+    # 8. Improvement Tips
+    if any(k in msg_clean for k in ["improve", "tips", "increase chances", "boost", "how to get approved"]):
+        return """**🚀 Top Ways to Improve Approval Odds:**
+
+1. ✅ Clear existing credit card balances to lower FOIR below 40%.
+2. ✅ Extend loan tenure (e.g. from 24 to 48 months) to reduce monthly EMI.
+3. ✅ Check nationalised banks (SBI, BOB) first — they have more flexible salary thresholds.
+4. ✅ Add a earning co-applicant with stable income.
+5. ✅ Maintain minimum 1–2 years stability in current employment."""
+
+    # 9. Required Documents
+    if any(k in msg_clean for k in ["document", "documents", "docs", "papers", "id proof", "salary slip"]):
+        return """**📄 Standard Document Checklist:**
+
+**Salaried Applicants:**
+• Aadhaar Card & PAN Card  
+• Last 3 months' salary slips  
+• Last 6 months' bank account statement  
+• Form 16 / Latest ITR  
+
+**Self-Employed Applicants:**
+• PAN Card, Aadhaar Card & Business Proof  
+• Past 2 years' ITR with P&L computation  
+• 12 months' primary bank statement"""
+
+    # 10. Greetings
+    if any(k in msg_clean for k in ["hi", "hello", "hey", "namaste", "help"]):
+        return """👋 **Hello! I'm your AI Loan Assistant.**
+
+I can help you with:
+• **Your Profile Chances** (*"What are my chances?"*)
+• **Bank Criteria** (*"What are SBI rules?"* or *"HDFC requirements?"*)
+• **CIBIL Score tips** (*"How to improve CIBIL?"*)
+• **FOIR & EMI explanations** (*"What is FOIR?"*)
+• **Required Documents** (*"What documents do I need?"*)
+
+Ask me any question below!"""
+
+    # 11. Default Fallback
     return """I am your **AI Loan Assistant**! I can answer questions about:
-- **Your Personal Profile Eligibility**
-- **Nationalised Banks (SBI, BOB, IOB, PNB)**
-- **CIBIL Score requirements**
-- **FOIR & EMI calculations**
-- **Documents needed & rejection recovery**
+- **Your Personal Profile Eligibility** (*"Why rejected?"* or *"My chances"*)
+- **Bank Rules** (*"SBI requirements"* or *"Bank of Baroda"*)
+- **CIBIL Score & FOIR calculations**
+- **Document checklist & tips to get approved**
 
-Try asking: *"Why was I rejected?"* or *"What are Bank of Baroda requirements?"*"""
+Try asking: *"What are SBI rules?"* or *"What is FOIR?"* or *"My status"*."""
 
 # ============================================================
 # SESSION STATE INITIALIZATION
@@ -989,58 +1060,89 @@ with tab4:
         st.pyplot(fig)
 
 # ============================================================
-# FLOATING CHATBOT WIDGET (BOTTOM-RIGHT FIXED)
+# FLOATING CHATBOT WIDGET (BOTTOM-RIGHT FIXED POPUP)
 # ============================================================
 
-# Toggle button script / FAB
-fab_col1, fab_col2 = st.columns([8, 1])
-
-# Floating FAB trigger
-st.markdown("""
-<div class="floating-chat-toggle">
-</div>
-""", unsafe_allow_html=True)
-
-# Render Chatbot inside Floating Container when toggled or open
 with st.sidebar:
     st.markdown("---")
-    st.markdown('<p style="color:#38bdf8;font-size:12px;font-weight:700;letter-spacing:.06em;">💬 AI LOAN CHATBOT WIDGET</p>', unsafe_allow_html=True)
-    if st.button("💬 Toggle Floating Chat Window", use_container_width=True):
+    st.markdown('<p style="color:#38bdf8;font-size:12px;font-weight:700;letter-spacing:.06em;">💬 AI LOAN CHATBOT</p>', unsafe_allow_html=True)
+    sidebar_label = "✖ Close Chat Popup" if st.session_state.chat_open else "💬 Open AI Loan Assistant"
+    if st.button(sidebar_label, use_container_width=True, key="sidebar_chat_btn"):
         st.session_state.chat_open = not st.session_state.chat_open
         st.rerun()
 
-# Floating Chatbox UI
+# Floating FAB button fixed in bottom right corner
+with st.container(key="floating_fab_box"):
+    fab_label = "✖ Close Assistant" if st.session_state.chat_open else "💬 Ask AI Assistant"
+    if st.button(fab_label, key="fab_chat_toggle"):
+        st.session_state.chat_open = not st.session_state.chat_open
+        st.rerun()
+
+# Floating Chat Popup Card — ALL chat elements are strictly INSIDE this popup!
 if st.session_state.chat_open:
-    with st.container():
-        st.markdown(f"""
-        <div class="chat-floating-card">
-          <div class="chat-card-header">
+    with st.container(key="floating_chat_popup"):
+        # Header row
+        p_c1, p_c2 = st.columns([5, 1])
+        with p_c1:
+            st.markdown("""
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:20px">🤖</span>
+              <span style="font-size:22px">🤖</span>
               <div>
-                <div style="font-weight:800;font-size:14px;color:white;">AI Loan Assistant</div>
-                <div style="font-size:10px;color:#93c5fd;">Live Profile Context Active</div>
+                <div style="font-weight:800;font-size:14px;color:#0f172a;line-height:1.2;">AI Loan Assistant</div>
+                <div style="font-size:11px;color:#16a34a;font-weight:600;">● Live Profile Active</div>
               </div>
             </div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+        with p_c2:
+            if st.button("✖", key="popup_close_btn", help="Close"):
+                st.session_state.chat_open = False
+                st.rerun()
 
-    # Chat container fixed in bottom right space
-    st.markdown("##### 💬 Live AI Loan Assistant Window")
-    chat_box = st.container(height=320)
-    with chat_box:
-        for msg in st.session_state.chat_history:
-            with st.chat_message(msg["role"], avatar="🤖" if msg["role"]=="assistant" else "👤"):
-                st.markdown(msg["content"])
+        st.markdown('<div style="height:4px"></div>', unsafe_allow_html=True)
 
-    user_input = st.chat_input("Ask about CIBIL, FOIR, BOB/PNB rules, or your profile...", key="floating_chat_input")
-    if user_input:
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        bot_res = get_context_chat_response(user_input, context_payload)
-        st.session_state.chat_history.append({"role": "assistant", "content": bot_res})
-        st.rerun()
+        # Quick question chips
+        q1, q2, q3 = st.columns(3)
+        if q1.button("FOIR?", key="q_foir", use_container_width=True):
+            st.session_state.chat_history.append({"role": "user", "content": "What is FOIR?"})
+            res = get_context_chat_response("What is FOIR?", context_payload)
+            st.session_state.chat_history.append({"role": "assistant", "content": res})
+            st.rerun()
+        if q2.button("SBI Rules", key="q_sbi", use_container_width=True):
+            st.session_state.chat_history.append({"role": "user", "content": "What are SBI requirements?"})
+            res = get_context_chat_response("What are SBI requirements?", context_payload)
+            st.session_state.chat_history.append({"role": "assistant", "content": res})
+            st.rerun()
+        if q3.button("My Chances", key="q_chances", use_container_width=True):
+            st.session_state.chat_history.append({"role": "user", "content": "What are my chances?"})
+            res = get_context_chat_response("What are my chances?", context_payload)
+            st.session_state.chat_history.append({"role": "assistant", "content": res})
+            st.rerun()
 
-    if st.button("🗑️ Clear Chat History"):
-        st.session_state.chat_history = [{"role": "assistant", "content": "Chat history reset! How can I assist you with your loan application?"}]
-        st.rerun()
+        # Messages container inside the popup
+        chat_box = st.container(height=280)
+        with chat_box:
+            for msg in st.session_state.chat_history:
+                with st.chat_message(msg["role"], avatar="🤖" if msg["role"]=="assistant" else "👤"):
+                    st.markdown(msg["content"])
+
+        # Input form inside the popup
+        with st.form("popup_chat_form", clear_on_submit=True):
+            f_col1, f_col2 = st.columns([5, 1])
+            user_msg = f_col1.text_input("Ask question", placeholder="Ask about FOIR, CIBIL, banks...", label_visibility="collapsed")
+            f_submit = f_col2.form_submit_button("➤")
+            if f_submit and user_msg:
+                st.session_state.chat_history.append({"role": "user", "content": user_msg})
+                res = get_context_chat_response(user_msg, context_payload)
+                st.session_state.chat_history.append({"role": "assistant", "content": res})
+                st.rerun()
+
+        # Bottom actions
+        b_c1, b_c2 = st.columns([1, 1])
+        if b_c1.button("🗑️ Clear History", key="clear_chat_btn", use_container_width=True):
+            st.session_state.chat_history = [{"role": "assistant", "content": "Chat history reset! How can I assist you with your loan application?"}]
+            st.rerun()
+        if b_c2.button("📄 Documents?", key="q_docs", use_container_width=True):
+            st.session_state.chat_history.append({"role": "user", "content": "What documents are required?"})
+            res = get_context_chat_response("What documents are required?", context_payload)
+            st.session_state.chat_history.append({"role": "assistant", "content": res})
+            st.rerun()
